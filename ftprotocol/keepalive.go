@@ -9,14 +9,10 @@ func (ka KeepAlive) ToByte() []byte {
 }
 
 func (ka KeepAlive) Message() []byte {
-	ka.Start = STX
-	ka.SessionKey = []byte("FF")
-	ka.Sequence = byte('2')
-	ka.MessageID = []byte("00")
-	ka.Unused = []byte("00")
+	ka.Frame.Init()
 
 	ka.MessageData = nil
-	ka.End = ETX
+	//	ka.End = ETX
 
 	return ka.ByteArray()
 }

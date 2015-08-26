@@ -6,7 +6,7 @@ import (
 
 	//	"encoding/hex"
 	"github.com/grayzone/devicemonitor/util"
-	_ "log"
+	"log"
 )
 
 var ProtocolVer uint32 = 0x2728
@@ -50,6 +50,11 @@ func (f *Frame) ByteArray() []byte {
 
 	result := new(bytes.Buffer)
 
+	if !bytes.Equal(f.MessageID, []byte{0x31, 0x31}) {
+		result.WriteByte(ACK)
+		result.WriteByte(f.Sequence)
+	}
+
 	result.WriteByte(f.Start)
 	result.Write(f.SessionKey)
 	result.WriteByte(f.Sequence)
@@ -75,6 +80,33 @@ func (f *Frame) ByteArray() []byte {
 	return result.Bytes()
 }
 
-func (f *Frame) Parse([]byte) {
+func (f *Frame) Parse(input []byte) {
+
+	if len(input) == 0 {
+		return
+	}
+	if input[0] == ACK {
+		input = input[2:]
+	}
+	f.Start = input[0]
+	f.SessionKey = input[1:3]
+	f.Sequence = input[3]
+	f.MessageID = input[4:6]
+	f.Unused = input[6:8]
+	msglen := len(input) - 13
+	log.Println("message length:", msglen)
+	f.MessageData = input[8 : msglen+8]
+	f.MessageData = util.UuDecode(f.MessageData)
+	f.CRC = input[msglen+8 : msglen+12]
+	f.End = input[msglen+12]
+
+	log.Printf("start : %x\n", f.Start)
+	log.Printf("SessionKey : %x\n", f.SessionKey)
+	log.Printf("Sequence : %x\n", f.Sequence)
+	log.Printf("MessageID : %x\n", f.MessageID)
+	log.Printf("Unused : %x\n", f.Unused)
+	log.Printf("MessageData : %x\n", f.MessageData)
+	log.Printf("CRC : %x\n", f.CRC)
+	log.Printf("End : %x\n", f.End)
 
 }

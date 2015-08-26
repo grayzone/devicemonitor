@@ -3,7 +3,7 @@ package ftprotocol
 import (
 	"bytes"
 	"encoding/binary"
-	"log"
+	_ "log"
 )
 
 type RequestSession struct {
@@ -33,11 +33,11 @@ func (r RequestSession) ToByte() []byte {
 func (r RequestSession) Message() []byte {
 	r.Frame.Init()
 
-	r.DeviceID = DeviceID
-	r.ProtocolVersion = ProtocolVer
+	//	r.DeviceID = DeviceID
+	//	r.ProtocolVersion = ProtocolVer
 	r.MessageData = r.ToByte()
 
-	log.Printf("%X", r.ByteArray())
+	//	log.Printf("%X", r.ByteArray())
 
 	return r.ByteArray()
 }

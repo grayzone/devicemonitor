@@ -1,10 +1,10 @@
 package util
 
-func UnDecodeLength(srclen uint32) uint32 {
+func UnDecodeLength(srclen int) int {
 	return (srclen * 3) / 4
 }
 
-func UnEncodeLength(srclen uint32) uint32 {
+func UnEncodeLength(srclen int) int {
 	destlen := (srclen * 4) / 3
 
 	if (srclen*4)%3 != 0 {
@@ -15,11 +15,11 @@ func UnEncodeLength(srclen uint32) uint32 {
 
 func UuEnocde(src []byte) []byte {
 	//	log.Printf("%X", src)
-	srclen := uint32(len(src))
+	srclen := len(src)
 	destlen := UnEncodeLength(srclen)
 	dest := make([]byte, destlen)
-	var destIndex uint32 = 0
-	var srcIndex uint32 = 0
+	var destIndex int = 0
+	var srcIndex int = 0
 	for srcIndex < srclen {
 		//Encode A
 		dest[destIndex] = byte(((uint32(src[srcIndex]) >> 2) & 0x3F) + 0x20)
@@ -60,12 +60,12 @@ func UuEnocde(src []byte) []byte {
 }
 
 func UuDecode(src []byte) []byte {
-	srclen := uint32(len(src))
+	srclen := len(src)
 	destlen := UnDecodeLength(srclen)
 	dest := make([]byte, destlen)
 
-	var destIndex uint32 = 0
-	var srcIndex uint32 = 0
+	var destIndex int = 0
+	var srcIndex int = 0
 
 	for srcIndex < srclen {
 		// Decode A

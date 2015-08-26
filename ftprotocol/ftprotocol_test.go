@@ -3,6 +3,7 @@ package ftprotocol
 import (
 	//	"bytes"
 	"encoding/hex"
+	_ "reflect"
 	"testing"
 )
 
@@ -24,17 +25,3 @@ func TestByteArray(t *testing.T) {
 		}
 	}
 }
-
-/*
-
-MessageTable := []struct{
-    Name string
-    ID   uint32
-
-    }{
-
-    {"RequestSession", 0x11},
-    {"RequestSessionResponse", 0x12},
-    {"KeepAlive", 0x00},
-}
-*/
