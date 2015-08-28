@@ -40,7 +40,11 @@ type MessageTable struct {
 var MessageList []MessageTable = []MessageTable{
 	MessageTable{"RequestSession", 0x11, Encoded, 56},
 	MessageTable{"KeepAlive", 0x00, ASCII, 0},
+	MessageTable{"DeviceNameRequest", 0x1D, Encoded, 0},
 	MessageTable{"RequestSessionResponse", 0x12, Encoded, 64},
+	MessageTable{"GetSensor", 0x3B, Encoded, 24},
+	MessageTable{"GetCriticalData", 0x37, Encoded, 64},
+	MessageTable{"GetActivationHistogram", 0x2B, Encoded, 0},
 }
 
 func FindMessageTable(id int) *MessageTable {

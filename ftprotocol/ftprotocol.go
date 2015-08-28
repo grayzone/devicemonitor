@@ -31,6 +31,7 @@ type Frame struct {
 	MessageData []byte
 	CRC         []byte
 	End         byte
+	NoAck       bool
 }
 
 func (f *Frame) Init() {
@@ -49,10 +50,16 @@ func (f *Frame) ByteArray() []byte {
 	msg := FindMessageTable(int(msgid))
 
 	result := new(bytes.Buffer)
-
-	if !bytes.Equal(f.MessageID, []byte{0x31, 0x31}) {
+	/*
+		if !bytes.Equal(f.MessageID, []byte{0x31, 0x31}) {
+			result.WriteByte(ACK)
+			result.WriteByte(f.Sequence)
+		}
+	*/
+	if !f.NoAck {
 		result.WriteByte(ACK)
 		result.WriteByte(f.Sequence)
+
 	}
 
 	result.WriteByte(f.Start)
@@ -70,8 +77,11 @@ func (f *Frame) ByteArray() []byte {
 		}
 
 	}
-
-	f.CRC = util.Crc16Byte(result.Bytes())
+	if !f.NoAck {
+		f.CRC = util.Crc16Byte(result.Bytes()[2:])
+	} else {
+		f.CRC = util.Crc16Byte(result.Bytes())
+	}
 
 	result.Write(f.CRC)
 

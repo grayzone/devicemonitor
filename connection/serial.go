@@ -2,7 +2,7 @@ package connection
 
 import (
 	"log"
-	_ "time"
+	"time"
 
 	"github.com/tarm/serial"
 )
@@ -19,7 +19,7 @@ func OpenSerial() error {
 	c = new(serial.Config)
 	c.Baud = 115200
 	c.Name = "COM1"
-	//	c.ReadTimeout = time.Microsecond * 10
+	c.ReadTimeout = time.Millisecond * 200
 	var err error
 	s = new(serial.Port)
 	s, err = serial.OpenPort(c)
@@ -47,7 +47,7 @@ func Sender(msg []byte) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	//	time.Sleep(time.Millisecond * 250)
+	//	time.Sleep(time.Millisecond * 100)
 	result := make([]byte, 2048)
 	n, err = s.Read(result)
 	if err != nil {

@@ -52,6 +52,9 @@ func TestCrc16Byte(t *testing.T) {
 		{"0246463231313030202020202030202029523c202020202020202020202020202020202020202020202020202020", "42313343"},
 		{"0246463631443030", "36373739"},
 		{"0246463335413030", "31304538"},
+		{"0246463930303030", "34363641"},
+		{"0246463030303030", "44384642"},
+		{"0246463430303030", "30343342"},
 	}
 
 	for _, c := range cases {
@@ -60,7 +63,7 @@ func TestCrc16Byte(t *testing.T) {
 		output := Crc16Byte(input)
 		got := hex.EncodeToString(output)
 		if got != c.want {
-			t.Errorf("Crc16Byte()\nwant\t%s\ngot\t%s\n", c.want, got)
+			t.Errorf("Crc16Byte()\ngiven\t%s\nwant\t%s\ngot\t%s\n", c.in, c.want, got)
 		}
 	}
 

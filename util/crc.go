@@ -1,6 +1,9 @@
 package util
 
-import "fmt"
+import (
+	"fmt"
+	_ "log"
+)
 
 var crc16Table []uint16 = make([]uint16, 256)
 
@@ -40,6 +43,7 @@ func Crc16(addr []byte) uint16 {
 func Crc16Byte(addr []byte) []byte {
 	//	log.Printf("%X", addr)
 	crc := Crc16(addr)
-	s := fmt.Sprintf("%X", crc)
+	//	log.Printf("%X : %04X", addr, crc)
+	s := fmt.Sprintf("%04X", crc)
 	return []byte(s)
 }
