@@ -26,7 +26,8 @@ func (r GetCriticalData) Message() []byte {
 
 	r.MessageData = r.ToByte()
 
-	//	log.Printf("%X", r.ByteArray())
+	
+    //	log.Printf("%X", r.ByteArray())
 
 	return r.ByteArray()
 }

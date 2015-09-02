@@ -3,7 +3,7 @@ package ftprotocol
 import (
 	"bytes"
 	"encoding/binary"
-	"log"
+	_ "log"
 )
 
 type GetSensor struct {
@@ -34,9 +34,11 @@ func (r GetSensor) ToByte() []byte {
 func (r GetSensor) Message() []byte {
 	r.Frame.Init()
 
+	r.MessageID = []byte{0x33, 0x42}
+
 	r.MessageData = r.ToByte()
 
-	log.Printf("%X", r.ByteArray())
+	//	log.Printf("%X", r.ByteArray())
 
 	return r.ByteArray()
 }

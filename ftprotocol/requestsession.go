@@ -32,6 +32,7 @@ func (r RequestSession) ToByte() []byte {
 
 func (r RequestSession) Message() []byte {
 	r.Frame.Init()
+	r.MessageID = []byte{0x31, 0x31}
 
 	//	r.DeviceID = DeviceID
 	//	r.ProtocolVersion = ProtocolVer

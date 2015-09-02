@@ -11,6 +11,8 @@ func (ka KeepAlive) ToByte() []byte {
 func (ka KeepAlive) Message() []byte {
 	ka.Frame.Init()
 
+	ka.MessageID = []byte{0x30, 0x30}
+
 	ka.MessageData = nil
 	//	ka.End = ETX
 

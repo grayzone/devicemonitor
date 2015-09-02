@@ -1,4 +1,4 @@
-package connection
+package comm
 
 import (
 	"log"
@@ -27,7 +27,11 @@ func OpenSerial() error {
 }
 
 func CloseSerial() error {
-	return s.Close()
+	if s != nil {
+		return s.Close()
+	}
+	log.Println("serial port is closed.")
+	return nil
 }
 
 //c.Baud = 115200
@@ -39,7 +43,7 @@ func Sender(msg []byte) []byte {
 
 	//	s, _ := serial.OpenPort(c)
 
-	log.Printf("%X", msg)
+	log.Printf("SEND: %X", msg)
 
 	//	defer s.Close()
 	var n int
@@ -55,4 +59,19 @@ func Sender(msg []byte) []byte {
 	}
 	return result[:n]
 
+}
+
+func Writer(msg []byte) error {
+	_, err := s.Write(msg)
+	return err
+}
+
+func Reader() ([]byte, error) {
+	result := make([]byte, 2048)
+
+	n, err := s.Read(result)
+	if err != nil {
+		return []byte(""), err
+	}
+	return result[:n], nil
 }
