@@ -1,6 +1,7 @@
 package comm
 
 import (
+	"errors"
 	"log"
 	"time"
 
@@ -62,7 +63,11 @@ func Sender(msg []byte) []byte {
 }
 
 func Writer(msg []byte) error {
-	_, err := s.Write(msg)
+	n, err := s.Write(msg)
+	log.Println(n, err)
+	if n == 0 {
+		return errors.New("failed to write data to device.")
+	}
 	return err
 }
 

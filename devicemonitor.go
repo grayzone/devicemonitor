@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"log"
+	"sync"
 	"time"
 
 	"github.com/grayzone/devicemonitor/comm"
@@ -38,6 +39,7 @@ func Test_GetSensorData() {
 			r.ProtocolVersion = 0x2729
 			r.SessionKey = sessionkey
 			r.Sequence = sequence
+
 			r.NoAck = true
 			log.Printf("send requestsession : %X", r.Message())
 
@@ -106,30 +108,36 @@ func Test_GetSensorData() {
 
 }
 
-func generatoer() {
+func generator(t time.Duration) {
 	var sequence byte = 0x30
 	for {
-		var k ftprotocol.KeepAlive
-		k.SessionKey = []byte{0x46, 0x46}
-		k.Sequence = sequence
-		log.Printf("send keepalive : %X", k.Message())
+		var s conn.Setting
+		s.GetSetting()
+		if s.Isconnected {
+			var k ftprotocol.KeepAlive
+			k.SessionKey = []byte(s.Sessionkey)
+			k.Sequence = byte(s.Sequence[0])
 
-		var m conn.Message
-		m.Messagetype = conn.REQUEST
-		m.Info = hex.EncodeToString(k.Message())
-		m.Status = conn.NONE
+			log.Printf("send keepalive : %X", k.Message())
 
-		m.InsertMessage()
+			var m conn.Message
+			m.Messagetype = conn.REQUEST
+			m.Info = hex.EncodeToString(k.Message())
+			m.Status = conn.NONE
 
-		sequence = IncreaseSeq(sequence)
+			m.InsertMessage()
 
-		time.Sleep(time.Millisecond * 200)
+			sequence = IncreaseSeq(sequence)
+
+		}
+
+		time.Sleep(time.Millisecond * time.Duration(s.Writeinterval))
 
 	}
 
 }
 
-func writer() {
+func writer(t time.Duration) {
 	// get one request
 	for {
 		var m conn.Message
@@ -142,10 +150,16 @@ func writer() {
 		log.Printf("get one request :%v", m)
 
 		b, _ := hex.DecodeString(m.Info)
-		comm.Writer(b)
+		err = comm.Writer(b)
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
 
 		m.DeleteMessage()
 		log.Println("the request is deleted.")
+
+		time.Sleep(time.Millisecond * t)
 
 	}
 
@@ -167,11 +181,16 @@ func SessionRequest() {
 	m.InsertMessage()
 }
 
-func worker() {
+func worker(t time.Duration) {
+
+	for {
+		log.Println("working....")
+		time.Sleep(time.Millisecond * t)
+	}
 
 }
 
-func reader() {
+func reader(t time.Duration) {
 	for {
 		var m conn.Message
 		b, _ := comm.Reader()
@@ -181,27 +200,53 @@ func reader() {
 			m.Status = conn.NONE
 
 			m.InsertMessage()
+
 		}
+		time.Sleep(time.Millisecond * t)
 
 	}
 
 }
 
-func Test_channel() {
+func done(t time.Duration, wg *sync.WaitGroup) {
+	bStop := false
+	for {
+		if bStop {
+			for i := 0; i < len(funclist); i++ {
+				wg.Done()
+			}
+			log.Println("done........")
 
-	err := comm.OpenSerial()
-	if err != nil {
-		log.Println(err.Error())
+		}
+		time.Sleep(time.Millisecond * t)
 	}
-	go generatoer()
-	go writer()
-	go reader()
-	go worker()
-	go SessionRequest()
-	time.Sleep(time.Second * 10)
+
+}
+
+var funclist []string = []string{"generator", "writer", "reader", "worker", "done"}
+
+func Test_concurrency() {
+	err := comm.OpenSerial()
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	var wg sync.WaitGroup
+	wg.Add(len(funclist))
+
+	go generator(time.Duration(250))
+	go writer(time.Duration(200))
+	go reader(time.Duration(200))
+	go worker(time.Duration(1000))
+	go done(time.Duration(1000000), &wg)
+
+	wg.Wait()
+
 }
 
 func main() {
-	Test_channel()
+	//	Test_channel()
+
+	Test_concurrency()
 
 }
