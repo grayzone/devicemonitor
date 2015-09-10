@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/hex"
 	"log"
+	"strconv"
 	"sync"
 	"time"
 
@@ -109,7 +110,6 @@ func Test_GetSensorData() {
 }
 
 func generator(t time.Duration) {
-	var sequence byte = 0x30
 	for {
 		var s conn.Setting
 		s.GetSetting()
@@ -118,7 +118,9 @@ func generator(t time.Duration) {
 			k.SessionKey = []byte(s.Sessionkey)
 			k.Sequence = byte(s.Sequence[0])
 
-			log.Printf("send keepalive : %X", k.Message())
+			//			log.Printf("session key : %X, sequence : %X\n", k.SessionKey, k.Sequence)
+
+			//		log.Printf("send keepalive : %X", k.Message())
 
 			var m conn.Message
 			m.Messagetype = conn.REQUEST
@@ -127,11 +129,12 @@ func generator(t time.Duration) {
 
 			m.InsertMessage()
 
-			sequence = IncreaseSeq(sequence)
+			//			sequence = IncreaseSeq(sequence)
 
 		}
 
-		time.Sleep(time.Millisecond * time.Duration(s.Writeinterval))
+		time.Sleep(time.Millisecond * time.Duration(t))
+		//		time.Sleep(time.Millisecond * time.Duration(s.Writeinterval))
 
 	}
 
@@ -140,52 +143,114 @@ func generator(t time.Duration) {
 func writer(t time.Duration) {
 	// get one request
 	for {
-		var m conn.Message
-		err := m.GetOneRequest()
-		if err != nil {
-			log.Println(err.Error())
-			continue
+		var s conn.Setting
+		s.GetSetting()
+		//		time.Sleep(time.Millisecond * time.Duration(s.Writeinterval))
+		time.Sleep(time.Millisecond * time.Duration(t))
+		if s.Isconnected {
+			var m conn.Message
+			err := m.GetOneRequest()
+			if err != nil {
+				//				log.Println("writer:", err.Error())
+				continue
+			}
+
+			//			log.Printf("get one request :%v", m)
+
+			b, _ := hex.DecodeString(m.Info)
+			err = comm.Writer(b)
+			if err != nil {
+				log.Println(err.Error())
+				continue
+			}
+
+			m.DeleteMessage()
+			//			log.Println("the request is deleted.")
 		}
-
-		log.Printf("get one request :%v", m)
-
-		b, _ := hex.DecodeString(m.Info)
-		err = comm.Writer(b)
-		if err != nil {
-			log.Println(err.Error())
-			continue
-		}
-
-		m.DeleteMessage()
-		log.Println("the request is deleted.")
-
-		time.Sleep(time.Millisecond * t)
 
 	}
-
-}
-
-func SessionRequest() {
-	var r ftprotocol.RequestSession
-	r.DeviceID = 0xD8
-	r.ProtocolVersion = 0x2729
-	r.SessionKey = []byte{0x46, 0x46}
-	r.Sequence = 0x30
-	r.NoAck = true
-
-	var m conn.Message
-	m.Messagetype = conn.REQUEST
-	m.Info = hex.EncodeToString(r.Message())
-	m.Status = conn.NONE
-
-	m.InsertMessage()
 }
 
 func worker(t time.Duration) {
 
 	for {
-		log.Println("working....")
 		time.Sleep(time.Millisecond * t)
+
+		//		log.Println("working....")
+		var m conn.Message
+		err := m.GetOneResponse()
+		if err != nil {
+			//		log.Println("worker:", err.Error())
+			continue
+			//			log.Printf("get one response :%v", m)
+		}
+
+		b, err := hex.DecodeString(m.Info)
+		if err != nil {
+			log.Println(err.Error())
+			m.Status = conn.INVALID
+			m.UpdateStatus()
+			continue
+		}
+		var f ftprotocol.Frame
+		s, err := f.Parse(b)
+		if err != nil {
+			log.Println(err.Error())
+			continue
+		}
+
+		msgid, _ := strconv.ParseInt(string(f.MessageID), 16, 32)
+
+		switch msgid {
+		case ftprotocol.REQUESTSESSIONRESPONSE:
+			var sessionres ftprotocol.RequestSessionResponse
+			sessionres.Frame = f
+			err := sessionres.ParseMessageData(f.MessageData)
+			if err != nil {
+				log.Println(err.Error())
+				m.Status = conn.INVALID
+				m.UpdateStatus()
+				continue
+			}
+
+			var s conn.Setting
+			s.Sessionstatus = sessionres.SessionStatus
+			s.UpdateSessionStatus()
+
+			s.Sessiontimeout = sessionres.SessionTimeout
+			s.UpdateSessiontimeout()
+
+			s.Deviceid = conn.DeviceID(sessionres.DeviceID)
+			s.UpdateDeviceid()
+
+			s.Protocolver = strconv.FormatUint(uint64(sessionres.ProtocolVersion), 10)
+			s.UpdateProtocolVer()
+
+			s.Sessionkey = string(sessionres.SessionKey)
+			s.UpdateSessionKey()
+
+			s.Sequence = string(sessionres.Sequence)
+			s.UpdateSequence()
+
+			s.Messagetimeout = sessionres.MessageTimeout
+			s.UpdateMessagetimeout()
+
+			s.Maxretrycount = sessionres.MaxRetryCount
+			s.UpdateMaxretrycount()
+
+		default:
+			log.Printf("unsupported message : %X", msgid)
+
+		}
+		if len(s) > 0 {
+			m.Info = s
+			m.UpdateInfo()
+		} else {
+			log.Println(m)
+			m.DeleteMessage()
+			//			log.Println("the response is deleted.")
+		}
+
 	}
 
 }
@@ -235,9 +300,9 @@ func Test_concurrency() {
 	wg.Add(len(funclist))
 
 	go generator(time.Duration(250))
-	go writer(time.Duration(200))
-	go reader(time.Duration(200))
-	go worker(time.Duration(1000))
+	go writer(time.Duration(0))
+	go reader(time.Duration(0))
+	go worker(time.Duration(0))
 	go done(time.Duration(1000000), &wg)
 
 	wg.Wait()

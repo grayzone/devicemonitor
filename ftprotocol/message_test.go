@@ -12,9 +12,9 @@ func TestMessage(t *testing.T) {
 		in   Message
 		want string
 	}{
-		{RequestSession{Frame: Frame{SessionKey: []byte("FF"), Sequence: byte('0'), MessageID: []byte("11")}, DeviceID: DeviceID, ProtocolVersion: ProtocolVer}, "024646303131303020202020203020202952402020202020202020202020202020202020202020202020202020203536313103"},
-		{RequestSession{Frame: Frame{SessionKey: []byte("FF"), Sequence: byte('2'), MessageID: []byte("11")}, DeviceID: 0x01, ProtocolVersion: 0x2727}, "0246463231313030202020202030202029523c2020202020202020202020202020202020202020202020202020204231334303"},
-		{KeepAlive{Frame{SessionKey: []byte("FF"), Sequence: byte('0'), MessageID: []byte("00")}}, "02464630303030304438464203"},
+		{RequestSession{Frame: Frame{SessionKey: []byte("FF"), Sequence: byte('0'), MessageID: []byte("11"), NoAck: true}, DeviceID: DeviceID, ProtocolVersion: ProtocolVer}, "024646303131303020202020203020202952402020202020202020202020202020202020202020202020202020203536313103"},
+		{RequestSession{Frame: Frame{SessionKey: []byte("FF"), Sequence: byte('2'), MessageID: []byte("11"), NoAck: true}, DeviceID: 0x01, ProtocolVersion: 0x2727}, "0246463231313030202020202030202029523c2020202020202020202020202020202020202020202020202020204231334303"},
+		{KeepAlive{Frame{SessionKey: []byte("FF"), Sequence: byte('0'), MessageID: []byte("00")}}, "063002464630303030304438464203"},
 	}
 
 	for _, c := range cases {
@@ -88,7 +88,7 @@ func TestFindMessageTable(t *testing.T) {
 	}
 }
 
-func TestParse(t *testing.T) {
+func TestMessageParse(t *testing.T) {
 	cases := []struct {
 		in   string
 		want MessageTable
@@ -100,7 +100,7 @@ func TestParse(t *testing.T) {
 
 		input, _ := hex.DecodeString(c.in)
 
-		got := Parse(input)
+		got := MessageParse(input)
 
 		if !reflect.DeepEqual(got, c.want) {
 			t.Errorf("ByteArray(),\nwant\t%q\ngot\t%q\n", c.want, got)

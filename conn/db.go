@@ -21,12 +21,13 @@ type MessageStatus int64
 const (
 	NONE      MessageStatus = 0
 	PROCESSED MessageStatus = 1
+	INVALID   MessageStatus = 2
 )
 
 const ()
 
 type Message struct {
-	Id          int
+	Id          int64
 	Messagetype MessageType
 	Info        string
 	Status      MessageStatus
@@ -44,17 +45,22 @@ const (
 )
 
 type Setting struct {
-	Id            int
-	Isconnected   bool
-	Deviceid      DeviceID
-	Protocolver   string
-	Sessionkey    string
-	Sequence      string
-	Writeinterval int64
+	Id             int64
+	Isconnected    bool
+	Deviceid       DeviceID
+	Protocolver    string
+	Sessionkey     string
+	Sequence       string
+	Writeinterval  int
+	Sessionstatus  uint32
+	Sessiontimeout uint32
+	Messagetimeout uint32
+	Maxretrycount  uint32
+	Updatetime     time.Time
 }
 
 func init() {
-	orm.Debug = true
+	orm.Debug = false
 	orm.RegisterDriver("postgres", orm.DR_Postgres)
 	connstr := "user=postgres password=123456 dbname=devicemonitor sslmode=disable"
 	orm.RegisterDataBase("default", "postgres", connstr)
@@ -72,18 +78,45 @@ func (m *Message) InsertMessage() {
 		log.Println(err.Error())
 		o.Rollback()
 	} else {
-		log.Println(id)
+		//		log.Println(id)
+		m.Id = id
 	}
 
 	o.Commit()
+}
+
+func (m *Message) Get() error {
+	o := orm.NewOrm()
+	err := o.Read(m)
+	return err
+
 }
 
 func (m *Message) GetOneRequest() error {
 	o := orm.NewOrm()
 
 	err := o.QueryTable("message").Filter("messagetype", REQUEST).Filter("status", NONE).OrderBy("id").Limit(1).One(m)
-	return err
 
+	return err
+}
+
+func (m *Message) GetOneResponse() error {
+	o := orm.NewOrm()
+	err := o.QueryTable("message").Filter("messagetype", RESPONSE).Filter("status", NONE).OrderBy("id").Limit(1).One(m)
+
+	return err
+}
+
+func (m *Message) UpdateStatus() error {
+	o := orm.NewOrm()
+	_, err := o.Update(m, "Status")
+	return err
+}
+
+func (m *Message) UpdateInfo() error {
+	o := orm.NewOrm()
+	_, err := o.Update(m, "Info")
+	return err
 }
 
 func (m *Message) DeleteMessage() {
@@ -92,7 +125,7 @@ func (m *Message) DeleteMessage() {
 
 	_, err := o.Delete(m)
 	if err != nil {
-		log.Fatal(err)
+		log.Println("DeleteMessage:", err.Error())
 	}
 }
 
@@ -105,12 +138,17 @@ func (s *Setting) GetSetting() error {
 func (s *Setting) Update(item string) error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
-		"isconnected":   s.Isconnected,
-		"deviceid":      s.Deviceid,
-		"Protocolver":   s.Protocolver,
-		"Sessionkey":    s.Sessionkey,
-		"Sequence":      s.Sequence,
-		"Writeinterval": s.Writeinterval,
+		"isconnected":    s.Isconnected,
+		"deviceid":       s.Deviceid,
+		"protocolver":    s.Protocolver,
+		"sessionkey":     s.Sessionkey,
+		"sequence":       s.Sequence,
+		"writeinterval":  s.Writeinterval,
+		"sessionstatus":  s.Sessionstatus,
+		"sessiontimeout": s.Sessiontimeout,
+		"messagetimeout": s.Messagetimeout,
+		"maxretrycount":  s.Maxretrycount,
+		"updatetime":     time.Now(),
 	})
 	return err
 }
@@ -119,6 +157,7 @@ func (s *Setting) UpdateIsConnected() error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
 		"isconnected": s.Isconnected,
+		"updatetime":  time.Now(),
 	})
 	return err
 }
@@ -127,7 +166,8 @@ func (s *Setting) UpdateDeviceid() error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
 
-		"deviceid": s.Deviceid,
+		"deviceid":   s.Deviceid,
+		"updatetime": time.Now(),
 	})
 	return err
 }
@@ -136,7 +176,8 @@ func (s *Setting) UpdateProtocolVer() error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
 
-		"Protocolver": s.Protocolver,
+		"protocolver": s.Protocolver,
+		"updatetime":  time.Now(),
 	})
 	return err
 }
@@ -145,7 +186,8 @@ func (s *Setting) UpdateSessionKey() error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
 
-		"Sessionkey": s.Sessionkey,
+		"sessionkey": s.Sessionkey,
+		"updatetime": time.Now(),
 	})
 	return err
 }
@@ -154,7 +196,8 @@ func (s *Setting) UpdateSequence() error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
 
-		"Sequence": s.Sequence,
+		"sequence":   s.Sequence,
+		"updatetime": time.Now(),
 	})
 	return err
 }
@@ -163,7 +206,49 @@ func (s *Setting) UpdateWriteInterval() error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
 
-		"Writeinterval": s.Writeinterval,
+		"writeinterval": s.Writeinterval,
+		"updatetime":    time.Now(),
+	})
+	return err
+}
+
+func (s *Setting) UpdateSessionStatus() error {
+	o := orm.NewOrm()
+	_, err := o.QueryTable("setting").Update(orm.Params{
+
+		"sessionstatus": s.Sessionstatus,
+		"updatetime":    time.Now(),
+	})
+	return err
+
+}
+
+func (s *Setting) UpdateSessiontimeout() error {
+	o := orm.NewOrm()
+	_, err := o.QueryTable("setting").Update(orm.Params{
+
+		"sessiontimeout": s.Sessiontimeout,
+		"updatetime":     time.Now(),
+	})
+	return err
+}
+
+func (s *Setting) UpdateMessagetimeout() error {
+	o := orm.NewOrm()
+	_, err := o.QueryTable("setting").Update(orm.Params{
+
+		"messagetimeout": s.Messagetimeout,
+		"updatetime":     time.Now(),
+	})
+	return err
+}
+
+func (s *Setting) UpdateMaxretrycount() error {
+	o := orm.NewOrm()
+	_, err := o.QueryTable("setting").Update(orm.Params{
+
+		"maxretrycount": s.Maxretrycount,
+		"updatetime":    time.Now(),
 	})
 	return err
 }

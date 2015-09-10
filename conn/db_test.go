@@ -6,6 +6,32 @@ import (
 	"testing"
 )
 
+func TestUpdateStatus(t *testing.T) {
+	cases := []struct {
+		in   MessageStatus
+		want MessageStatus
+	}{
+		{NONE, NONE},
+		{PROCESSED, PROCESSED},
+		{INVALID, INVALID},
+	}
+	for _, c := range cases {
+		var m Message
+		m.Status = c.in
+		m.InsertMessage()
+		m.Status = c.want
+		m.UpdateStatus()
+		m.Get()
+		got := m.Status
+		if m.Status != c.want {
+			t.Errorf("UpdateStatus(),\nwant\t%v\ngot\t%v\n", c.want, got)
+		}
+
+		m.DeleteMessage()
+	}
+
+}
+
 func TestGetSetting(t *testing.T) {
 
 	var s Setting

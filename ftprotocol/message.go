@@ -3,8 +3,6 @@ package ftprotocol
 import (
 	_ "encoding/hex"
 	"errors"
-	"github.com/grayzone/devicemonitor/util"
-	"log"
 	_ "reflect"
 	"strconv"
 )
@@ -69,9 +67,9 @@ func GetMessageID(input []byte) (int, error) {
 	return int(msgid), nil
 }
 
-func Parse(input []byte) MessageTable {
-	log.Println(len(input))
-	log.Printf("%X", input)
+func MessageParse(input []byte) MessageTable {
+	//	log.Println(len(input))
+	//	log.Printf("%X", input)
 	var result MessageTable
 	if len(input) == 0 {
 		return result
@@ -79,22 +77,23 @@ func Parse(input []byte) MessageTable {
 	if input[0] == ACK {
 		input = input[2:]
 	}
+	/*
+		messageid := string(input[4:6])
+		msgid, _ := strconv.ParseInt(messageid, 16, 32)
 
-	messageid := string(input[4:6])
-	msgid, _ := strconv.ParseInt(messageid, 16, 32)
-	msg := FindMessageTable(int(msgid))
+			msg := FindMessageTable(int(msgid))
 
-	var msglen int
-	if msg.Encoding == Encoded {
-		msglen = util.UnEncodeLength(msg.Length)
-	} else {
-		msglen = msg.Length
-	}
+				var msglen int
+				if msg.Encoding == Encoded {
+					msglen = util.UnEncodeLength(msg.Length)
+				} else {
+					msglen = msg.Length
+				}
 
-	log.Println(len(input)-13, msglen/2)
+					log.Println(len(input)-13, msglen/2)
 
-	log.Println("Message", msg, msgid)
-
+					log.Println("Message", msg, msgid)
+	*/
 	return result
 
 }

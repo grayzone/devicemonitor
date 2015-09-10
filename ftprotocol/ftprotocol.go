@@ -2,11 +2,13 @@ package ftprotocol
 
 import (
 	"bytes"
+	"encoding/hex"
+	"errors"
+	"fmt"
+	"log"
 	"strconv"
 
-	//	"encoding/hex"
 	"github.com/grayzone/devicemonitor/util"
-	"log"
 )
 
 var ProtocolVer uint32 = 0x2728
@@ -90,25 +92,61 @@ func (f *Frame) ByteArray() []byte {
 	return result.Bytes()
 }
 
-func (f *Frame) Parse(input []byte) {
+func (f *Frame) Parse(input []byte) (string, error) {
+	var result string
+	if len(input) < 2 {
+		return result, errors.New("invalid length")
+	}
+	for {
+		if len(input) >= 2 {
+			if input[0] == ACK || input[0] == NAK {
+				if input[1] <= 0x39 && input[1] >= 0x30 {
+					input = input[2:]
+				}
+			} else {
+				break
+			}
+		} else {
+			return result, errors.New("no message parsed")
+		}
+	}
+	if len(input) < 13 {
+		return hex.EncodeToString(input), errors.New("incomplete input")
+	}
+	// get message id
+	messageid := string(input[4:6])
+	msgid, _ := strconv.ParseInt(messageid, 16, 32)
+	msg := FindMessageTable(int(msgid))
+	if msg == nil {
+		errmsg := fmt.Sprintf("not found the mssage id : %d", msgid)
+		return "", errors.New(errmsg)
+	}
 
-	if len(input) == 0 {
-		return
+	var msglen int
+	if msg.Encoding == Encoded {
+		msglen = util.UnEncodeLength(msg.Length)
+	} else {
+		msglen = msg.Length
 	}
-	if input[0] == ACK {
-		input = input[2:]
-	}
+	msglen = msglen / 2
+	//	log.Println("message length:", msglen)
+
 	f.Start = input[0]
 	f.SessionKey = input[1:3]
 	f.Sequence = input[3]
 	f.MessageID = input[4:6]
 	f.Unused = input[6:8]
-	msglen := len(input) - 13
-	log.Println("message length:", msglen)
-	f.MessageData = input[8 : msglen+8]
-	f.MessageData = util.UuDecode(f.MessageData)
+	if msg.Encoding != Encoded {
+		f.MessageData = input[8 : msglen+8]
+	} else {
+		f.MessageData = util.UuDecode(input[8 : msglen+8])
+	}
+
+	//	f.MessageData = util.UuDecode(f.MessageData)
 	f.CRC = input[msglen+8 : msglen+12]
 	f.End = input[msglen+12]
+
+	result = hex.EncodeToString(input[msglen+13:])
 
 	log.Printf("start : %x\n", f.Start)
 	log.Printf("SessionKey : %x\n", f.SessionKey)
@@ -118,5 +156,7 @@ func (f *Frame) Parse(input []byte) {
 	log.Printf("MessageData : %x\n", f.MessageData)
 	log.Printf("CRC : %x\n", f.CRC)
 	log.Printf("End : %x\n", f.End)
+
+	return result, nil
 
 }

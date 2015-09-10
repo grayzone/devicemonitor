@@ -1,7 +1,6 @@
 package comm
 
 import (
-	"errors"
 	"log"
 	"time"
 
@@ -63,10 +62,10 @@ func Sender(msg []byte) []byte {
 }
 
 func Writer(msg []byte) error {
-	n, err := s.Write(msg)
-	log.Println(n, err)
-	if n == 0 {
-		return errors.New("failed to write data to device.")
+	_, err := s.Write(msg)
+	//	log.Println("serial write:", n, err)
+	if err != nil {
+		log.Println(err.Error())
 	}
 	return err
 }
@@ -75,7 +74,9 @@ func Reader() ([]byte, error) {
 	result := make([]byte, 2048)
 
 	n, err := s.Read(result)
+	//	log.Println("serial read:", n, err)
 	if err != nil {
+		log.Println(err.Error())
 		return []byte(""), err
 	}
 	return result[:n], nil
