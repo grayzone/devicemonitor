@@ -12,6 +12,8 @@ import (
 	"github.com/grayzone/devicemonitor/ftprotocol"
 )
 
+var bSoftDelete = false
+
 func IncreaseSeq(seq byte) byte {
 	if seq == 0x39 {
 		return 0x30
@@ -140,6 +142,15 @@ func generator(t time.Duration) {
 
 }
 
+func IncreaseOneSequence() {
+	var s conn.Setting
+	s.GetSetting()
+	//	log.Printf(" seq  :%x", byte(s.Sequence[0]))
+	s.Sequence = string(IncreaseSeq(byte(s.Sequence[0])))
+	//	log.Printf("Sequence : %s", s.Sequence)
+	s.UpdateSequence()
+}
+
 func writer(t time.Duration) {
 	// get one request
 	for {
@@ -163,9 +174,16 @@ func writer(t time.Duration) {
 				log.Println(err.Error())
 				continue
 			}
+			log.Printf("Send:%X", b)
+			IncreaseOneSequence()
 
-			m.DeleteMessage()
-			//			log.Println("the request is deleted.")
+			if bSoftDelete {
+				m.Status = conn.DELETED
+				m.UpdateStatus()
+			} else {
+				m.DeleteMessage()
+				//		log.Println("the request is deleted.")
+			}
 		}
 
 	}
@@ -185,6 +203,8 @@ func worker(t time.Duration) {
 			//			log.Printf("get one response :%v", m)
 		}
 
+		//		log.Println(m.Info)
+
 		b, err := hex.DecodeString(m.Info)
 		if err != nil {
 			log.Println(err.Error())
@@ -193,9 +213,14 @@ func worker(t time.Duration) {
 			continue
 		}
 		var f ftprotocol.Frame
+		//		log.Printf("%X", b)
 		s, err := f.Parse(b)
 		if err != nil {
-			log.Println(err.Error())
+			log.Printf("%X:%s\n", b, err.Error())
+			//	m.DeleteMessage()
+			m.Status = conn.INVALID
+			m.UpdateStatus()
+
 			continue
 		}
 
@@ -238,6 +263,29 @@ func worker(t time.Duration) {
 			s.Maxretrycount = sessionres.MaxRetryCount
 			s.UpdateMaxretrycount()
 
+		case ftprotocol.DEVICENAMERESPONSE:
+			var res ftprotocol.DeviceNameResponse
+			res.Frame = f
+			err := res.ParseMessageData(f.MessageData)
+			if err != nil {
+				log.Println(err.Error())
+				m.Status = conn.INVALID
+				m.UpdateStatus()
+				continue
+			}
+			var s conn.Setting
+			//		log.Println("device  name : ", res.StringName)
+			s.Devicename = res.StringName
+			err = s.UpdateDevicename()
+			if err != nil {
+				log.Println(err.Error())
+			}
+
+		case ftprotocol.EMPTY:
+			var s conn.Setting
+			s.Sequence = string(f.Sequence)
+			//			log.Printf("sequence : %X", s.Sequence)
+			s.UpdateSequence()
 		default:
 			log.Printf("unsupported message : %X", msgid)
 
@@ -246,9 +294,14 @@ func worker(t time.Duration) {
 			m.Info = s
 			m.UpdateInfo()
 		} else {
-			log.Println(m)
-			m.DeleteMessage()
-			//			log.Println("the response is deleted.")
+			//			log.Println(m)
+			if bSoftDelete {
+				m.Status = conn.DELETED
+				m.UpdateStatus()
+			} else {
+				m.DeleteMessage()
+				//		log.Println("the request is deleted.")
+			}
 		}
 
 	}
@@ -263,7 +316,7 @@ func reader(t time.Duration) {
 			m.Messagetype = conn.RESPONSE
 			m.Info = hex.EncodeToString(b)
 			m.Status = conn.NONE
-
+			log.Printf("Received : %X", b)
 			m.InsertMessage()
 
 		}
@@ -294,16 +347,16 @@ func Test_concurrency() {
 	err := comm.OpenSerial()
 
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal("Test_concurrency:", err)
 	}
 	var wg sync.WaitGroup
 	wg.Add(len(funclist))
 
-	go generator(time.Duration(250))
-	go writer(time.Duration(0))
-	go reader(time.Duration(0))
-	go worker(time.Duration(0))
-	go done(time.Duration(1000000), &wg)
+	go generator(time.Duration(200))
+	go writer(time.Duration(200))
+	go reader(time.Duration(200))
+	go worker(time.Duration(200))
+	//	go done(time.Duration(1000000), &wg)
 
 	wg.Wait()
 

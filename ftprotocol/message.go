@@ -15,11 +15,13 @@ const (
 )
 
 const (
+	EMPTY                  = 0xFF
 	REQUESTSESSION         = 0x11
 	KEEPALIVE              = 0x00
 	REQUESTSESSIONRESPONSE = 0x12
 	GETRUNTIME             = 0x2D
 	DEVICENAMEREQUEST      = 0x1D
+	DEVICENAMERESPONSE     = 0x1E
 	GETVERSIONSREQUEST     = 0x5A
 )
 
@@ -39,6 +41,7 @@ var MessageList []MessageTable = []MessageTable{
 	MessageTable{"RequestSession", 0x11, Encoded, 56},
 	MessageTable{"KeepAlive", 0x00, ASCII, 0},
 	MessageTable{"DeviceNameRequest", 0x1D, Encoded, 0},
+	MessageTable{"DeviceNameResponse", 0x1E, Encoded, 144},
 	MessageTable{"RequestSessionResponse", 0x12, Encoded, 64},
 	MessageTable{"GetSensor", 0x3B, Encoded, 24},
 	MessageTable{"GetCriticalData", 0x37, Encoded, 64},

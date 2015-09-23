@@ -99,7 +99,17 @@ func (f *Frame) Parse(input []byte) (string, error) {
 	}
 	for {
 		if len(input) >= 2 {
-			if input[0] == ACK || input[0] == NAK {
+			if len(input) == 4 {
+				if input[0] == ACK {
+					if input[1] <= 0x39 && input[1] >= 0x30 {
+						f.MessageID = []byte(string("FF"))
+						log.Printf("message id : %X", f.MessageID)
+						f.Sequence = input[1]
+						return "", nil
+					}
+				}
+			}
+			if (input[0] == ACK) || (input[0] == NAK) {
 				if input[1] <= 0x39 && input[1] >= 0x30 {
 					input = input[2:]
 				}
@@ -107,7 +117,8 @@ func (f *Frame) Parse(input []byte) (string, error) {
 				break
 			}
 		} else {
-			return result, errors.New("no message parsed")
+			log.Println("no message parsed")
+			return "", nil
 		}
 	}
 	if len(input) < 13 {
@@ -118,9 +129,10 @@ func (f *Frame) Parse(input []byte) (string, error) {
 	msgid, _ := strconv.ParseInt(messageid, 16, 32)
 	msg := FindMessageTable(int(msgid))
 	if msg == nil {
-		errmsg := fmt.Sprintf("not found the mssage id : %d", msgid)
+		errmsg := fmt.Sprintf("not found the mssage id in the message table : 0x%X", msgid)
 		return "", errors.New(errmsg)
 	}
+	//	log.Println(msg)
 
 	var msglen int
 	if msg.Encoding == Encoded {
@@ -129,7 +141,11 @@ func (f *Frame) Parse(input []byte) (string, error) {
 		msglen = msg.Length
 	}
 	msglen = msglen / 2
-	//	log.Println("message length:", msglen)
+	if len(input) < msglen+13 {
+		log.Printf("invalid message length : %d, should be %d+", len(input), msglen+13)
+		return "", errors.New("invalid message length")
+
+	}
 
 	f.Start = input[0]
 	f.SessionKey = input[1:3]

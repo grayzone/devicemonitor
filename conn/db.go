@@ -22,6 +22,7 @@ const (
 	NONE      MessageStatus = 0
 	PROCESSED MessageStatus = 1
 	INVALID   MessageStatus = 2
+	DELETED   MessageStatus = 3
 )
 
 const ()
@@ -56,6 +57,7 @@ type Setting struct {
 	Sessiontimeout uint32
 	Messagetimeout uint32
 	Maxretrycount  uint32
+	Devicename     string
 	Updatetime     time.Time
 }
 
@@ -148,6 +150,7 @@ func (s *Setting) Update(item string) error {
 		"sessiontimeout": s.Sessiontimeout,
 		"messagetimeout": s.Messagetimeout,
 		"maxretrycount":  s.Maxretrycount,
+		"devicename":     s.Devicename,
 		"updatetime":     time.Now(),
 	})
 	return err
@@ -249,6 +252,16 @@ func (s *Setting) UpdateMaxretrycount() error {
 
 		"maxretrycount": s.Maxretrycount,
 		"updatetime":    time.Now(),
+	})
+	return err
+}
+
+func (s *Setting) UpdateDevicename() error {
+	o := orm.NewOrm()
+	_, err := o.QueryTable("setting").Update(orm.Params{
+
+		"devicename": s.Devicename,
+		"updatetime": time.Now(),
 	})
 	return err
 }
