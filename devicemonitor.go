@@ -286,7 +286,7 @@ func worker(t time.Duration) {
 			res.Frame = f
 			err := res.ParseMessageData(f.MessageData)
 			if err != nil {
-				log.Println(err.Error())
+				log.Println("GETSENSORRESPONSE:", err.Error())
 				m.Status = conn.INVALID
 				m.UpdateStatus()
 				continue
@@ -297,6 +297,18 @@ func worker(t time.Duration) {
 			if err != nil {
 				log.Println("UpdateSensorbroadcastperiod :", err.Error())
 			}
+
+		case ftprotocol.DSP1SENSORDATA:
+			var res ftprotocol.Dsp1SensorData
+			res.Frame = f
+			err := res.ParseMessageData(f.MessageData)
+			if err != nil {
+				log.Println("DSP1SENSORDATA:", err.Error())
+				m.Status = conn.INVALID
+				m.UpdateStatus()
+				continue
+			}
+
 		case ftprotocol.EMPTY:
 			var s conn.Setting
 			s.Sequence = string(f.Sequence)
@@ -370,7 +382,7 @@ func Test_concurrency() {
 
 	go generator(time.Duration(200))
 	go writer(time.Duration(1))
-	go reader(time.Duration(1))
+	go reader(time.Duration(200))
 	go worker(time.Duration(1))
 	//	go done(time.Duration(1000000), &wg)
 

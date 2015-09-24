@@ -150,10 +150,10 @@ func (f *Frame) Parse(input []byte) (string, error) {
 	} else {
 		msglen = msglen/2 + 1
 	}
+	//	log.Printf("oril : %d, after : %d", msg.Length, msglen)
 	if len(input) < msglen+13 {
 		log.Printf("invalid message length : %d, should be %d+", len(input), msglen+13)
 		return "", errors.New("invalid message length")
-
 	}
 
 	f.Start = input[0]
