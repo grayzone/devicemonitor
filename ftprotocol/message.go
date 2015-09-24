@@ -23,6 +23,10 @@ const (
 	DEVICENAMEREQUEST      = 0x1D
 	DEVICENAMERESPONSE     = 0x1E
 	GETVERSIONSREQUEST     = 0x5A
+	GETSENSOR              = 0x3B
+	GETSENSORRESPONSE      = 0x3E
+	ALLSENSORDATA          = 0x60
+	DSP1SENSORDATA         = 0x61
 )
 
 type Message interface {
@@ -44,6 +48,9 @@ var MessageList []MessageTable = []MessageTable{
 	MessageTable{"DeviceNameResponse", 0x1E, Encoded, 144},
 	MessageTable{"RequestSessionResponse", 0x12, Encoded, 64},
 	MessageTable{"GetSensor", 0x3B, Encoded, 24},
+	MessageTable{"AllSensorData", 0x60, Encoded, 368},
+	MessageTable{"Dsp1SensorData", 0x61, Encoded, 168},
+	MessageTable{"GetSensorResponse", 0x3E, Encoded, 8},
 	MessageTable{"GetCriticalData", 0x37, Encoded, 64},
 	MessageTable{"GetActivationHistogram", 0x2B, Encoded, 0},
 }

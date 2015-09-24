@@ -46,19 +46,20 @@ const (
 )
 
 type Setting struct {
-	Id             int64
-	Isconnected    bool
-	Deviceid       DeviceID
-	Protocolver    string
-	Sessionkey     string
-	Sequence       string
-	Writeinterval  int
-	Sessionstatus  uint32
-	Sessiontimeout uint32
-	Messagetimeout uint32
-	Maxretrycount  uint32
-	Devicename     string
-	Updatetime     time.Time
+	Id                    int64
+	Isconnected           bool
+	Deviceid              DeviceID
+	Protocolver           string
+	Sessionkey            string
+	Sequence              string
+	Writeinterval         int
+	Sessionstatus         uint32
+	Sessiontimeout        uint32
+	Messagetimeout        uint32
+	Maxretrycount         uint32
+	Devicename            string
+	Sensorbroadcastperiod uint32
+	Updatetime            time.Time
 }
 
 func init() {
@@ -140,18 +141,19 @@ func (s *Setting) GetSetting() error {
 func (s *Setting) Update(item string) error {
 	o := orm.NewOrm()
 	_, err := o.QueryTable("setting").Update(orm.Params{
-		"isconnected":    s.Isconnected,
-		"deviceid":       s.Deviceid,
-		"protocolver":    s.Protocolver,
-		"sessionkey":     s.Sessionkey,
-		"sequence":       s.Sequence,
-		"writeinterval":  s.Writeinterval,
-		"sessionstatus":  s.Sessionstatus,
-		"sessiontimeout": s.Sessiontimeout,
-		"messagetimeout": s.Messagetimeout,
-		"maxretrycount":  s.Maxretrycount,
-		"devicename":     s.Devicename,
-		"updatetime":     time.Now(),
+		"isconnected":           s.Isconnected,
+		"deviceid":              s.Deviceid,
+		"protocolver":           s.Protocolver,
+		"sessionkey":            s.Sessionkey,
+		"sequence":              s.Sequence,
+		"writeinterval":         s.Writeinterval,
+		"sessionstatus":         s.Sessionstatus,
+		"sessiontimeout":        s.Sessiontimeout,
+		"messagetimeout":        s.Messagetimeout,
+		"maxretrycount":         s.Maxretrycount,
+		"devicename":            s.Devicename,
+		"sensorbroadcastperiod": s.Sensorbroadcastperiod,
+		"updatetime":            time.Now(),
 	})
 	return err
 }
@@ -262,6 +264,16 @@ func (s *Setting) UpdateDevicename() error {
 
 		"devicename": s.Devicename,
 		"updatetime": time.Now(),
+	})
+	return err
+}
+
+func (s *Setting) UpdateSensorbroadcastperiod() error {
+	o := orm.NewOrm()
+	_, err := o.QueryTable("setting").Update(orm.Params{
+
+		"sensorbroadcastperiod": s.Sensorbroadcastperiod,
+		"updatetime":            time.Now(),
 	})
 	return err
 }

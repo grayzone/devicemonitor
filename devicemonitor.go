@@ -278,9 +278,25 @@ func worker(t time.Duration) {
 			s.Devicename = res.StringName
 			err = s.UpdateDevicename()
 			if err != nil {
-				log.Println(err.Error())
+				log.Println("UpdateDevicename:", err.Error())
 			}
 
+		case ftprotocol.GETSENSORRESPONSE:
+			var res ftprotocol.GetSensorResponse
+			res.Frame = f
+			err := res.ParseMessageData(f.MessageData)
+			if err != nil {
+				log.Println(err.Error())
+				m.Status = conn.INVALID
+				m.UpdateStatus()
+				continue
+			}
+			var s conn.Setting
+			s.Sensorbroadcastperiod = res.BroadcastPeriod
+			err = s.UpdateSensorbroadcastperiod()
+			if err != nil {
+				log.Println("UpdateSensorbroadcastperiod :", err.Error())
+			}
 		case ftprotocol.EMPTY:
 			var s conn.Setting
 			s.Sequence = string(f.Sequence)
@@ -353,9 +369,9 @@ func Test_concurrency() {
 	wg.Add(len(funclist))
 
 	go generator(time.Duration(200))
-	go writer(time.Duration(200))
-	go reader(time.Duration(200))
-	go worker(time.Duration(200))
+	go writer(time.Duration(1))
+	go reader(time.Duration(1))
+	go worker(time.Duration(1))
 	//	go done(time.Duration(1000000), &wg)
 
 	wg.Wait()

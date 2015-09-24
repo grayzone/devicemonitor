@@ -118,6 +118,7 @@ func (f *Frame) Parse(input []byte) (string, error) {
 			}
 		} else {
 			log.Println("no message parsed")
+			f.MessageID = []byte(string("FF"))
 			return "", nil
 		}
 	}
@@ -125,6 +126,10 @@ func (f *Frame) Parse(input []byte) (string, error) {
 		return hex.EncodeToString(input), errors.New("incomplete input")
 	}
 	// get message id
+	if input[0] != STX {
+		return "", errors.New("unknown beginning of message.")
+	}
+
 	messageid := string(input[4:6])
 	msgid, _ := strconv.ParseInt(messageid, 16, 32)
 	msg := FindMessageTable(int(msgid))
@@ -140,7 +145,11 @@ func (f *Frame) Parse(input []byte) (string, error) {
 	} else {
 		msglen = msg.Length
 	}
-	msglen = msglen / 2
+	if msglen%2 == 0 {
+		msglen = msglen / 2
+	} else {
+		msglen = msglen/2 + 1
+	}
 	if len(input) < msglen+13 {
 		log.Printf("invalid message length : %d, should be %d+", len(input), msglen+13)
 		return "", errors.New("invalid message length")

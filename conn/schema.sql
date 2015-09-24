@@ -25,6 +25,7 @@ CREATE table IF NOT EXISTS setting(
   messagetimeout integer,
   maxretrycount  integer,
   devicename text,
+  sensorbroadcastperiod integer,
   updatetime timestamp with time zone,
 	CONSTRAINT setting_pkey PRIMARY KEY (id)
 )WITH(
