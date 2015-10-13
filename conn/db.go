@@ -62,13 +62,37 @@ type Setting struct {
 	Updatetime            time.Time
 }
 
+type Sensordata struct {
+	Id               int64
+	Isvaliddata      bool
+	Sequencenumber   uint32
+	Isactivatingflag bool
+	Vavg             float32
+	Iavg             float32
+	Pavg             float32
+	Vrms             float32
+	Irms             float32
+	Viphase          float32
+	Vpk              float32
+	Ipk              float32
+	Vcf              float32
+	Icf              float32
+	Zload            float32
+	T1               float32
+	T2               float32
+	Leakage          float32
+	Stimpos          float32
+	Stimneg          float32
+	Oltarget         float32
+}
+
 func init() {
 	orm.Debug = false
 	orm.RegisterDriver("postgres", orm.DR_Postgres)
 	connstr := "user=postgres password=123456 dbname=devicemonitor sslmode=disable"
 	orm.RegisterDataBase("default", "postgres", connstr)
 
-	orm.RegisterModel(new(Message), new(Setting))
+	orm.RegisterModel(new(Message), new(Setting), new(Sensordata))
 
 }
 
@@ -276,4 +300,20 @@ func (s *Setting) UpdateSensorbroadcastperiod() error {
 		"updatetime":            time.Now(),
 	})
 	return err
+}
+
+func (s *Sensordata) InsertSensordata() {
+	o := orm.NewOrm()
+	o.Begin()
+
+	id, err := o.Insert(s)
+	if err != nil {
+		log.Println(err.Error())
+		o.Rollback()
+	} else {
+		//		log.Println(id)
+		s.Id = id
+	}
+
+	o.Commit()
 }

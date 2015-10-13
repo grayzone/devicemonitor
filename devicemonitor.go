@@ -308,6 +308,29 @@ func worker(t time.Duration) {
 				m.UpdateStatus()
 				continue
 			}
+			var s conn.Sensordata
+			s.Isvaliddata = res.IsValidData
+			s.Sequencenumber = res.SequenceNumber
+			s.Isactivatingflag = res.IsActivatingFlag
+			s.Vavg = res.Vavg
+			s.Iavg = res.Iavg
+			s.Pavg = res.Pavg
+			s.Vrms = res.Vrms
+			s.Irms = res.Irms
+			s.Viphase = res.Viphase
+			s.Vpk = res.Vpk
+			s.Ipk = res.Ipk
+			s.Vcf = res.Vcf
+			s.Icf = res.Icf
+			s.Zload = res.Zload
+			s.T1 = res.T1
+			s.T2 = res.T2
+			s.Leakage = res.Leakage
+			s.Stimpos = res.Stimpos
+			s.Stimneg = res.Stimneg
+			s.Oltarget = res.Oltarget
+
+			s.InsertSensordata()
 
 		case ftprotocol.EMPTY:
 			var s conn.Setting

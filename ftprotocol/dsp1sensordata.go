@@ -27,7 +27,7 @@ type Dsp1SensorData struct {
 	T2               float32
 	Leakage          float32
 	Stimpos          float32
-	Stimneg1         float32
+	Stimneg          float32
 	Oltarget         float32
 	//	Stimneg2         float32
 }
@@ -88,7 +88,7 @@ func (r *Dsp1SensorData) ParseMessageData(data []byte) error {
 	r.T2 = readbytetofloat(data[60:64])
 	r.Leakage = readbytetofloat(data[64:68])
 	r.Stimpos = readbytetofloat(data[68:72])
-	r.Stimneg1 = readbytetofloat(data[72:76])
+	r.Stimneg = readbytetofloat(data[72:76])
 	r.Oltarget = readbytetofloat(data[76:80])
 	//	r.Stimneg2 = readbytetofloat(data[80:84])
 
@@ -111,7 +111,7 @@ func (r *Dsp1SensorData) ParseMessageData(data []byte) error {
 	log.Println("T2 : ", r.T2)
 	log.Println("Leakage : ", r.Leakage)
 	log.Println("Stimpos : ", r.Stimpos)
-	log.Println("Stimneg1 : ", r.Stimneg1)
+	log.Println("Stimneg : ", r.Stimneg)
 	log.Println("Oltarget : ", r.Oltarget)
 	//	log.Println("Stimneg2 : ", r.Stimneg2)
 
