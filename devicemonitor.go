@@ -330,6 +330,8 @@ func worker(t time.Duration) {
 			s.Stimneg = res.Stimneg
 			s.Oltarget = res.Oltarget
 
+			s.Createtime = time.Now()
+
 			s.InsertSensordata()
 
 		case ftprotocol.EMPTY:

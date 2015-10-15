@@ -84,6 +84,7 @@ type Sensordata struct {
 	Stimpos          float32
 	Stimneg          float32
 	Oltarget         float32
+	Createtime       time.Time
 }
 
 func init() {
@@ -316,4 +317,12 @@ func (s *Sensordata) InsertSensordata() {
 	}
 
 	o.Commit()
+}
+
+func (s *Sensordata) GetSensordata() error {
+	o := orm.NewOrm()
+	err := o.QueryTable("sensordata").OrderBy("-id").Limit(1).One(s, "Vavg", "Iavg", "Zload", "Icf", "T2", "Createtime")
+
+	return err
+
 }

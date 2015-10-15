@@ -39,10 +39,12 @@ func TestGetSetting(t *testing.T) {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Println("TestGetSetting")
 	log.Printf("%v\n", s)
 	log.Println(s.Isconnected)
 	log.Println(s.Deviceid)
 	log.Println(s.Protocolver)
+	log.Println("...")
 }
 
 func TestUpdateIsConnected(t *testing.T) {
@@ -70,4 +72,15 @@ func TestUpdateIsConnected(t *testing.T) {
 		}
 	}
 
+}
+
+func TestGetSensordata(t *testing.T) {
+	var s Sensordata
+	s.GetSensordata()
+	log.Println("TestGetSensordata")
+	log.Println(s.Vavg)
+	log.Println(s.Iavg)
+	log.Println(s.Icf)
+	log.Println(s.Createtime.String())
+	log.Println("...")
 }
