@@ -407,7 +407,7 @@ func Test_concurrency() {
 
 	go generator(time.Duration(200))
 	go writer(time.Duration(1))
-	go reader(time.Duration(200))
+	go reader(time.Duration(1))
 	go worker(time.Duration(1))
 	//	go done(time.Duration(1000000), &wg)
 
