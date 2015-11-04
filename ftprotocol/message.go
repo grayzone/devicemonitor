@@ -27,6 +27,7 @@ const (
 	GETSENSORRESPONSE      = 0x3E
 	ALLSENSORDATA          = 0x60
 	DSP1SENSORDATA         = 0x61
+	SCREENPRESS            = 0x62
 )
 
 type Message interface {
@@ -50,6 +51,7 @@ var MessageList []MessageTable = []MessageTable{
 	MessageTable{"GetSensor", 0x3B, Encoded, 24},
 	MessageTable{"AllSensorData", 0x60, Encoded, 384},
 	MessageTable{"Dsp1SensorData", 0x61, Encoded, 160},
+	MessageTable{"ScreenPress", 0x62, Encoded, 24},
 	MessageTable{"GetSensorResponse", 0x3E, Encoded, 8},
 	MessageTable{"GetCriticalData", 0x37, Encoded, 64},
 	MessageTable{"GetActivationHistogram", 0x2B, Encoded, 0},
